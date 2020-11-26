@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="layui-card" style="width:400px;margin: 250px auto auto;">
+    <div class="layui-card-header">
+        <h3>欢迎登录</h3>
+    </div>
+    <div class="layui-card-body">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <input type="text" class="layui-input" id="username" name="username"
+                       required lay-verify="required" placeholder="请输入用户名">
+            </div>
+            <div class="layui-form-item">
+                <input type="password" class="layui-input" id="password" name="password"
+                       required lay-verify="required" placeholder="请输入密码">
+            </div>
+            <div class="layui-form-item" style="margin:auto">
+                <input type="button" value="登 录" id='submit' class="layui-btn layui-btn-normal">
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    layui.use(['layer', 'form'], function () {
+        let layer = layui.layer;
+        let form = layui.form;
+        $('#submit').click(function () {
+            let data = {
+                'username': $('#username').val(),
+                'password': $('#password').val()
+            };
+            http('/login', 'post', data, function (response) {
+                if (response['status_code'] === 200) {
+                    window.location = '/index';
+                    // update_user()
+                } else if (response['status_code'] === 400) {
+                    layer.msg(response['message']);
+                }
+            }, function (response) {
+
+            })
+        });
+    })
+</script>
+{% endblock %}

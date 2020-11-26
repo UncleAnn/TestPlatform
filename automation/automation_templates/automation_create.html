@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}
+<title>UI自动化调试</title>
+{% endblock %}
+
+{% block script %}
+<script src="/automation/automation_static/automation.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="margin:10px">
+    <div style="margin: auto; width:1500px">
+        <div style="padding: 10px">
+            <span class="layui-breadcrumb">
+                <a href="">UI自动化</a>
+                <a><cite>脚本调试</cite></a>
+            </span>
+        </div>
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <h3>新建脚本</h3>
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form">
+                    <div class="layui-form-item">
+                        <div class="layui-inline">
+                            <div class="layui-input-inline" style="width:120px">
+                                <select name="team" id="team" lay-filter="team"></select>
+                            </div>
+                            <div class="layui-input-inline" style="width:150px">
+                                <select name="project" id="project" lay-verify="required"></select>
+                            </div>
+                            <div class="layui-input-inline" style="width:320px">
+                                <input id="title" type="text" class="layui-input" required
+                                       lay-verify="required" placeholder="请输入脚本标题">
+                            </div>
+                        </div>
+                        <div class="layui-inline">
+                            <input type="button" class="layui-btn" id="run" value="运行">
+                            <input type="button" class="layui-btn layui-btn-normal" id="add" value="新增">
+                            <input type="button" class="layui-btn layui-btn-warm" id="save" value="保存">
+                        </div>
+                    </div>
+                </form>
+                <form class="layui-form" id="script" style="display: none">
+                    <fieldset class="layui-elem-field layui-field-title">
+                        <legend>脚本区域</legend>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'layer', 'element'], function () {
+        let form = layui.form;
+        let layer = layui.layer;
+        let element = layui.element;
+        init_team_project(form);
+        addOperationLine(form);
+        run(layer);
+        deleteOperationLine();
+    })
+</script>
+
+{% endblock %}

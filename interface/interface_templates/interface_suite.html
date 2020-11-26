@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>套件列表</title>
+{% endblock %}
+
+{% block style %}
+{% endblock %}
+
+{% block script %}
+<script src="/interface/interface_static/interface.js"></script>
+{% endblock %}
+
+
+{% block content %}
+<div style="margin:10px">
+    <div class="layui-row" style="padding: 10px">
+        <span class="layui-breadcrumb">
+            <a href="">接口测试</a>
+            <a><cite>套件列表</cite></a>
+        </span>
+    </div>
+    <form id="filter" class="layui-form">
+        <div class="layui-form-item" style="margin-bottom: auto">
+            <label class="layui-form-label" style="margin-bottom: auto">筛选项</label>
+            <div class="layui-inline">
+                <select name="team" id="team" lay-filter="team"></select>
+            </div>
+            <div class="layui-inline">
+                <select name="project" id="project" lay-filter="project"></select>
+            </div>
+            <div class="layui-inline">
+                <input class="layui-btn layui-btn-normal" type="button" id="suite" value="创建套件">
+            </div>
+        </div>
+    </form>
+    <table id="suiteTable" lay-filter="test"></table>
+    <script type="text/html" id="barLine">
+        <i class="layui-icon layui-icon-play" lay-event="run" style="font-size:25px;color:#1E9FFF"></i>
+        <i class="layui-icon layui-icon-delete" lay-event="del" style="font-size:25px;color:#FF5722"></i>
+        <!--        <i class="layui-icon layui-icon-add-circle" lay-event="add" style="font-size:20px;color:#1E9FFF"></i>-->
+    </script>
+</div>
+<script>
+    // 自定义模块，这里只需要开放soulTable即可
+    layui.config({
+        base: '{/}/static/ext/',   // 第三方模块所在目录 {/}的意思即代表采用自有路径，即不跟随 base 路径
+    }).extend({
+        soulTable: 'soulTable'
+    });
+
+    let filter = '<form id="filter" class="layui-form">' +
+        '            <div class="layui-form-item" style="margin-bottom: auto">' +
+        '                <label class="layui-form-label" style="margin-bottom: auto">筛选项</label>' +
+        '                <div class="layui-inline">' +
+        '                    <select name="team" id="team" lay-filter="team">' +
+        '                    </select>' +
+        '                </div>' +
+        '                <div class="layui-inline">' +
+        '                    <select name="project" id="project" lay-filter="project">' +
+        '                    </select>' +
+        '                </div>' +
+        '            </div>' +
+        '        </form>';
+    layui.use(['table', 'form', 'element', 'layer', 'soulTable'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let element = layui.element;
+        let layer = layui.layer;
+        let soulTable = layui.soulTable;
+
+
+        init_team_project(form);
+        // table实例
+        let tableIns = table.render({
+            elem: '#suiteTable',
+            // height: 600,
+            url: '/interface/api/v1/suite', //数据接口
+            method: 'post',
+            title: '套件列表',
+            // where接口的其他参数
+            // where: {team: $('#team').val(), project: $('#project').val(), page: 1, limit: 10},
+            toolbar: 'false',  //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+            rowDrag: {
+                trigger: 'row', // 默认也是row，此行可以不写
+                done: function (obj) { // obj指表格
+                    // 完成时（松开时）触发
+                    // 如果拖动前和拖动后无变化，则不会触发此方法
+                    console.log(obj.row); // 当前行数据
+                    console.log(obj.cache); // 改动后全表数据
+                    console.log(obj.oldIndex); // 原来的数据索引
+                    console.log(obj.newIndex); // 改动后数据索引
+                }
+            },
+            totalRow: true,
+            page: true, //开启分页
+            cols: [[ //表头
+                {type: 'checkbox', fixed: 'left', width: 30},
+                {field: '_id', title: 'ID', width: 250, sort: true},
+                {field: 'team', title: '团队', width: 150},
+                {field: 'project', title: '项目', width: 200},
+                {field: 'case_ids', title: '接口组成', width: 400},
+                {title: '操作', fixed: 'right', width: 100, align: 'center', toolbar: '#barLine'}
+            ]],
+            done: function () { // 行拖拽之后soulTable渲染
+                soulTable.render(this)
+            },
+            parseData: function (res) { //res 即为原始返回的数据
+                return {
+                    "code": res.status, //解析接口状态
+                    "msg": res.message, //解析提示文本
+                    "count": res.data.length, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            }
+        });
+
+
+        //监听行工具事件, tool是工具条事件名，括号里填lay-filter="对应的值"
+        table.on('tool(test)', function (obj) {
+            //获得当前行数据，行工具只支持一行，多选也只支持选中的行
+            let chosen_data = obj.data;
+            //获得 lay-event 对应的值
+            let layEvent = obj.event;
+            if (layEvent === 'del') {
+                layer.confirm('确定删除此套件吗？', function (index) {
+                    //向服务端发送删除指令
+                    let id_list = [chosen_data['_id']];
+                    let url = '/interface/api/v1/deleteSuite';
+                    http(url, 'post', {'id_list': id_list},
+                        function (response) {
+                            layer.msg(response.message);
+                            tableIns.reload({url: '/interface/api/v1/suite'});
+                            if (response['status'] === 200) {
+                                //删除对应行（tr）的DOM结构
+                                obj.del();
+                            }
+                        },
+                        function (response) {
+                            layer.msg(response.message);
+                        }
+                    );
+                    layer.close(index);
+                });
+            } else if (layEvent === 'run') {
+                let url = '/interface/api/v1/runSuite';
+                let id_list = [chosen_data['_id']];
+                http(url, 'post', {'id_list': id_list},
+                    function (response) {
+                        layer.msg(response.message);
+                        // tableIns.reload({url: '/interface/api/v1/suite'});
+                    },
+                    function (response) {
+                        layer.msg(response.message);
+                    }
+                );
+            }
+        });
+        //监听form的select变化
+        form.on('select(team)', function () {
+            // 联动生成project，必须先清空select
+            $('#project').empty();
+            http('/variable/api/v1/searchProject', 'post', {type: 'team', team: $('#team').val()}, function (response) {
+                let projectData = response['data'];
+                let html = '';
+                // 拼接html
+                for (index in projectData) {
+                    let value = projectData[index]['project'];
+                    html += `<option value="${value}">${value}</option>`;
+                }
+                $('#project').append(html);
+                form.render();
+            }, function (response) {
+                console.log(response)
+            });
+        });
+        form.on('select(project)', function () {
+            tableIns.reload({
+                url: '/interface/api/v1/suite',
+                where: {
+                    team: $('#team').val(),
+                    project: $('#project').val(),
+                    page: 1,
+                    limit: 10
+                },
+            });
+
+        });
+
+        //监听头工具栏事件，toolbar()填table的lay-filter
+        // table.on('toolbar(test)', function (obj) {
+        //     //获取表格选中行，需要传table的id，不带井号
+        //     let checkStatus = table.checkStatus('variableTable');
+        //     let chosen_data = checkStatus.data; //获取选中的数据，列表
+        //     // 新增记录操作
+        //     if (obj.event === 'add') {
+        //         layer.open({
+        //             title: '新增变量',
+        //             type: 1,
+        //             skin: 'layui-layer-rim', //加上边框
+        //             area: ['450px', '400px'], //宽高
+        //             content: $('#dialog'),
+        //             method: 'post',
+        //             btn: ['确定'],
+        //             yes: function (index, layero) {
+        //                 let data = {
+        //                     'team': $('#teamInput').val(),
+        //                     'project': $('#projectInput').val(),
+        //                     'variable': $('#variable').val(),
+        //                     'value': $('#value').val()
+        //                 };
+        //                 http("/variable/api/v1/insert", 'POST', data, // 向服务器发起新增请求
+        //                     function (response) { // 请求成功时回调的匿名函数
+        //                         layer.msg(response.message);
+        //                         tableIns.reload({url: '/variable/api/v1/search'}); // 新增成功，向服务器请求最新数据并重载表格
+        //                     },
+        //                     function (response) { // 请求失败时回调的匿名函数
+        //                         layer.msg(response.message);
+        //                     });
+        //                 layer.close(index); //如果设定了yes回调，必须进行手工关闭layer
+        //             },
+        //             success: function (layero, index) {
+        //                 // $('#teamInput').val(''),
+        //                 // $('#projectInputone').val(''),
+        //                 $('#variable').val(''),
+        //                     $('#value').val('')
+        //             }
+        //         });
+        //     }
+        //     // 编辑记录操作
+        //     else if (obj.event === 'update') {
+        //         // console.log(data.length);
+        //         if (chosen_data.length === 0) {
+        //             layer.msg('编辑须选择一行');
+        //         } else if (chosen_data.length > 1) {
+        //             layer.msg('只能同时编辑一行');
+        //         } else {
+        //             // console.log(chosen_data);
+        //             layer.open({
+        //                 title: '修改变量',
+        //                 type: 1,
+        //                 skin: 'layui-layer-rim', //加上边框
+        //                 area: ['450px', '400px'], //宽高
+        //                 content: $('#dialog'),
+        //                 method: 'post',
+        //                 btn: ['确定'],
+        //                 yes: function (index, layero) {
+        //                     let url = "/variable/api/v1/update";
+        //                     let data = {
+        //                         '_id': chosen_data[0]['_id'],
+        //                         'team': $('#teamInput').val(),
+        //                         'project': $('#projectInput').val(),
+        //                         'variable': $('#variable').val(),
+        //                         'value': $('#value').val()
+        //                     };
+        //                     http(url, 'POST', data,
+        //                         function (response) {
+        //                             layer.msg(response.message);
+        //                             tableIns.reload({url: '/variable/api/v1/search'});
+        //                         },
+        //                         function (response) {
+        //                             layer.msg(response.message);
+        //                         });
+        //                     layer.close(index); //如果设定了yes回调，需进行手工关闭
+        //                 },
+        //                 // 弹出layer后执行的操作
+        //                 success: function (layero, index) {
+        //                     $('#teamInput').val(chosen_data[0]['team']);
+        //                     $('#projectInput').val(chosen_data[0]['project']);
+        //                     $('#variable').val(chosen_data[0]['variable']);
+        //                     $('#value').val(chosen_data[0]['value']);
+        //                     form.render();
+        //                 }
+        //             });
+        //         }
+        //     }
+        //     // 删除记录操作
+        //     else if (obj.event === 'delete') {
+        //         console.log(chosen_data.length);
+        //         if (chosen_data.length === 0) {
+        //             layer.msg('删除须最少选择一行');
+        //         } else {
+        //             layer.open({
+        //                 title: '删除',
+        //                 type: 1,
+        //                 skin: 'layui-layer-rim', //加上边框
+        //                 method: 'post',
+        //                 // area: ['200px', '100px'], //宽高
+        //                 content: '请谨慎操作，删除不可逆',
+        //                 btn: ['删除'],
+        //                 yes: function (index, layero) {
+        //                     let url = "/variable/api/v1/delete";
+        //                     let data = {'id_list': []};
+        //                     for (i in chosen_data) {
+        //                         data['id_list'].push(chosen_data[i]['_id'])
+        //                     }
+        //                     http(url, 'POST', data,
+        //                         function (response) {
+        //                             layer.msg(response.message);
+        //                             tableIns.reload({url: '/variable/api/v1/search'});
+        //                         },
+        //                         function (response) {
+        //                             layer.msg(response.message);
+        //                         });
+        //                     layer.close(index); //如果设定了yes回调，需进行手工关闭
+        //                 }
+        //             });
+        //         }
+        //     }
+        // });
+
+
+    });
+</script>
+{% endblock %}

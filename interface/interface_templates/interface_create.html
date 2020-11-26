@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>新增接口</title>
+{% endblock %}
+
+{% block style %}
+<style>
+    input.layui-btn {
+        width: 80px
+    }
+
+    input.layui-btn-radius {
+        width: 100px
+    }
+</style>
+<link rel="stylesheet" href="/interface/interface_static/interface.css">
+{% endblock %}
+
+{% block script %}
+<script src="/interface/interface_static/interface.js"></script>
+{% endblock %}
+
+
+{% block content %}
+<div style="margin:10px">
+    <div class="layui-row layui-col-space10" style="padding: 10px">
+        <span class="layui-breadcrumb">
+            <a href="">接口测试</a>
+            <a><cite>新增接口</cite></a>
+        </span>
+    </div>
+    <div class="layui-row">
+        <div class="layui-col-lg7" id="request">
+            <div class="layui-card" style="margin:5px">
+                <div class="layui-card-header">
+                    <h3>请求request</h3>
+                </div>
+                <div class="layui-card-body">
+                    <form class="layui-form">
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <div class="layui-input-inline" style="width:120px">
+                                    <select name="team" id="team" lay-filter="team"></select>
+                                </div>
+                                <div class="layui-input-inline" style="width:150px">
+                                    <select name="project" id="project" lay-verify="required"></select>
+                                </div>
+                                <div class="layui-input-inline" style="width:320px">
+                                    <input id="description" type="text" class="layui-input" required
+                                           lay-verify="required"
+                                           placeholder="请输入请求的描述文本">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <input type="button" id="headerBtn" value="header"
+                                       class="layui-btn">
+                                <input type="button" id="paramsBtn" value="params"
+                                       class="layui-btn layui-btn-normal">
+                                <input type="button" id="assertBtn" value="assert"
+                                       class="layui-btn layui-btn-danger">
+                                <input type="button" id="extractBtn" value="extract"
+                                       class="layui-btn layui-btn-warm">
+
+
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="layui-inline">
+                                <div class="layui-input-inline" style="width:80px">
+                                    <select name="method" id="method" lay-verify="required">
+                                        <option value="get" selected>get</option>
+                                        <option value="post">post</option>
+                                        <option value="put">put</option>
+                                        <option value="delte">delete</option>
+                                    </select>
+                                </div>
+                                <div class="layui-input-inline" style="width:675px">
+                                    <input id="url" type="text" class="layui-input" required lay-verify="required"
+                                           placeholder="请输入请求url">
+                                </div>
+                            </div>
+                            <div class="layui-inline">
+                                <input type="button" id="debugBtn" value="DEBUG"
+                                       class="layui-btn layui-btn-radius layui-btn-normal">
+                                <input type="button" id="saveBtn" value="SAVE"
+                                       class="layui-btn layui-btn-radius layui-btn-danger">
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item" id="header" style="display: none">
+                            <fieldset class="layui-elem-field layui-field-title">
+                                <legend>请求header</legend>
+                            </fieldset>
+                        </div>
+                        <div class="layui-form-item" id="params" style="display: none">
+                            <fieldset class="layui-elem-field layui-field-title">
+                                <legend>请求params</legend>
+                            </fieldset>
+                        </div>
+                        <div class="layui-form-item" id="assert" style="display: none">
+                            <fieldset class="layui-elem-field layui-field-title">
+                                <legend>响应assert</legend>
+                            </fieldset>
+                        </div>
+                        <div class="layui-form-item" id="extract" style="display: none">
+                            <fieldset class="layui-elem-field layui-field-title">
+                                <legend>全局变量extract</legend>
+                            </fieldset>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-lg5" id="response">
+            <div class="layui-card" style="margin:5px">
+                <div class="layui-card-header">
+                    <h3>响应response</h3>
+                </div>
+                <div class="layui-card-body">
+                    <div id="responseText">
+                        <pre></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    layui.use(['form', 'layer', 'element'], function () {
+        let form = layui.form;
+        let layer = layui.layer;
+        let element = layui.element;
+        init_team_project(form);
+        addHeaderLine();
+        delHeaderLine();
+        addParamsLine();
+        delParamsLine();
+        addAssertLine(form);
+        delAssertLine();
+        addExtractLine();
+        delExtractLine();
+        debug(layer);
+        save(layer);
+        //监听form的select变化
+        form.on('select(team)', function () {
+            // 先清空select
+            $('#project').empty();
+            let url = '/variable/api/v1/searchProject';
+            let data = {
+                type: 'team',
+                team: $('#team').val()
+            };
+            http(url, 'post', data, function (response) {
+                console.log(response);
+                let projectData = response['data'];
+                let html = '';
+                for (index in projectData) {
+                    let value = projectData[index]['project'];
+                    html += `<option value="${value}">${value}</option>`;
+                }
+                $('#project').append(html);
+                // 表单html改变需要手动render
+                form.render();
+            }, function (response) {
+                console.log(response)
+            })
+        })
+    });
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>团队管理</title>
+{% endblock %}
+
+{% block content %}
+<div id="dialog" style="display: none">
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">团队名</label>
+            <div class="layui-input-block">
+                <select name="teamInput" id="teamInput" lay-verify="required"></select>
+            </div>
+        </div>
+    </form>
+</div>
+<table id="team" lay-filter="test"></table>
+<script>
+    layui.use(['table'], function () {
+        let table = layui.table;
+        layui.use(['table', 'form'], function () {
+            var table = layui.table;
+            // table实例
+            let tableIns = table.render({
+                // 填表格id
+                elem: '#team',
+                // height: 600,
+                url: '/variable/team/v1/search', //数据接口
+                method: 'post',
+                title: '团队管理',
+                toolbar: 'default',  //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+                page: true, //开启分页
+                //表头
+                cols: [[
+                    {type: 'checkbox', fixed: 'left', width: 30},
+                    {field: '_id', title: 'ID', width: 200, sort: true},
+                    {field: 'team', title: '团队', width: 200},
+                ]],
+                //res 即为原始返回的数据
+                parseData: function (res) {
+                    return {
+                        "code": res.status, //解析接口状态
+                        "msg": res.message, //解析提示文本
+                        "count": res.data.length, //解析数据长度
+                        "data": res.data //解析数据列表
+                    };
+                }
+            });
+            //监听头工具栏事件，toolbar()填table的lay-filter
+            table.on('toolbar(test)', function (obj) {
+                // console.log(obj);
+                //获取表格选中行，需要传table的id，不带井号
+                let checkStatus = table.checkStatus('team');
+                let chosen_data = checkStatus.data; //获取选中的数据，列表
+                // 新增记录操作
+                if (obj.event === 'add') {
+                    layer.open({
+                        title: '新增团队',
+                        type: 1,
+                        // skin: 'layui-layer-rim', //加上边框
+                        area: ['200px', '150px'], //宽高
+                        content: $('#dialog'),
+                        method: 'post',
+                        btn: ['确定', '取消'],
+                        yes: function (index, layero) {
+                            let url = "/addressBook/insert";
+                            let data = {
+                                'team': $('#teamInput').val()
+                            };
+                            http(url, 'POST', data, // 向服务器发起新增请求
+                                // 请求成功时回调的匿名函数
+                                function (response) {
+                                    layer.msg(response.message);
+                                    // 新增成功，向服务器请求最新数据并重载表格
+                                    tableIns.reload({url: '/variable/team/v1/search'});
+                                },
+                                // 请求失败时回调的匿名函数
+                                function (response) {
+                                    layer.msg(response.message);
+                                });
+                            layer.close(index); //如果设定了yes回调，必须进行手工关闭layer
+                        },
+                        success: function (layero, index) {
+                            $('input').val('');
+                        }
+                    });
+                }
+                // 编辑记录操作
+                else if (obj.event === 'update') {
+                    // console.log(data.length);
+                    if (chosen_data.length === 0) {
+                        layer.msg('编辑须选择一行');
+                    } else if (chosen_data.length > 1) {
+                        layer.msg('只能同时编辑一行');
+                    } else {
+                        console.log(chosen_data);
+                        layer.open({
+                            title: '修改团队',
+                            type: 1,
+                            skin: 'layui-layer-rim', //加上边框
+                            area: ['200px', '150px'], //宽高
+                            content: $('#dialog'),
+                            method: 'post',
+                            btn: ['确定', '取消'],
+                            yes: function (index, layero) {
+                                let url = "/variable/team/v1/insert";
+                                let data = {
+                                    '_id': chosen_data[0]['_id'],
+                                    'team': $('#teamInput').val()
+                                };
+                                http(url, 'POST', data,
+                                    function (response) {
+                                        layer.msg(response.message);
+                                        tableIns.reload({url: '/variable/team/v1/search'});
+                                    },
+                                    function (response) {
+                                        layer.msg(response.message);
+                                    });
+                                layer.close(index); //如果设定了yes回调，需进行手工关闭
+                            },
+                            btn2: function (index, layero) {
+                                layer.close(index);
+                                $('input').val('');
+                            },
+                            // 弹出layer后执行的操作
+                            success: function (layero, index) {
+                                $('#teamInput').val(chosen_data[0]['team']);
+                            }
+                        });
+                    }
+                }
+                // 删除记录操作
+                else if (obj.event === 'delete') {
+                    console.log(chosen_data.length);
+                    if (chosen_data.length === 0) {
+                        layer.msg('删除须最少选择一行');
+                    } else {
+                        layer.open({
+                            title: '删除',
+                            type: 1,
+                            skin: 'layui-layer-rim', //加上边框
+                            method: 'post',
+                            // content: "确定要删除吗？",
+                            btn: ['删除', '取消'],
+                            yes: function (index, layero) {
+                                let url = "/variable/team/v1/delete";
+                                http(url, 'POST', chosen_data,
+                                    function (response) {
+                                        layer.msg(response.message);
+                                        tableIns.reload({url: '/variable/team/v1/search'});
+                                    },
+                                    function (response) {
+                                        layer.msg(response.message);
+                                    });
+                                layer.close(index); //如果设定了yes回调，需进行手工关闭
+                            },
+                            btn2: function (index, layero) {
+                                layer.close(index);
+                            },
+                        });
+                    }
+                }
+            });
+        })
+    })
+</script>
+{% endblock %}
+
+
+{% extends 'footer.html' %}

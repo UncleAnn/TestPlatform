@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% block title %}
+    {% endblock %}
+    <!--为配合layui-soul-table采用本地文件引入layui-->
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/layui/layui.js"></script>
+    <!--引入layui-soul-table-->
+    <script src="/static/ext/soulTable.js"></script>
+    {% block style %}
+    {% endblock %}
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="/static/common.js"></script>
+    <script>
+        window.onload=function () {
+            update_user()
+        }
+    </script>
+    {% block script %}
+    {% endblock %}
+</head>
+<body class="layui-bg-gray">
+{% include 'header.html' %}
+
+{% block content %}
+{% endblock %}
+
+<!--{% include 'footer.html' %}-->
+</body>
+</html>

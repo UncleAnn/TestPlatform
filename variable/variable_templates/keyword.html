@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block script %}
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/ace.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/mode-json.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/mode-python.js"></script>
+{% endblock %}
+
+{% block style %}
+
+{% endblock %}
+
+
+{% block content %}
+<div class="layui-row">
+    <div class="layui-card layui-col-lg5" style="margin: 10px">
+        <div class="layui-card-header">Json调试数据</div>
+        <div class="layui-card-body">
+            <div id="mock" style="height:700px"></div>
+        </div>
+    </div>
+    <div class="layui-card layui-col-lg5" style="margin: 10px">
+        <div class="layui-card-header">Python关键字</div>
+        <div class="layui-card-body">
+            <div id="kwEditor" style="height:700px"></div>
+        </div>
+    </div>
+    <div class="layui-col-lg1" style="margin: 10px">
+        <button id="debug" class="layui-btn">调试</button>
+        <button id="save" class="layui-btn layui-btn-normal">保存</button>
+    </div>
+</div>
+<script>
+    // 实例化一个编辑器对象，获取内容用 getValue()方法
+    let mock = ace.edit('mock');
+    // 设置编辑器皮肤
+    mock.setTheme('ace/theme/monokai');
+    // 设置编辑器的代码模式（json/python)
+    mock.getSession().setMode('ace/mode/json');
+    // 设置是否可折叠
+    mock.getSession().setUseWrapMode(true);
+    // 设置字体大小
+    mock.setFontSize(18);
+
+    let kwEditor = ace.edit('kwEditor');
+    kwEditor.setTheme('ace/theme/monokai');
+    kwEditor.getSession().setMode('ace/mode/python');
+    kwEditor.getSession().setUseWrapMode(true);
+    kwEditor.setFontSize(18);
+
+    function debug() {
+        let data = {
+            'mock': mock.getValue(),
+            'snippet': kwEditor.getValue()
+        };
+        http('/variable/api/v1/debug', 'post', data,
+            function (response) {
+                console.log(response);
+                alert(response['data']);
+            },
+            function (response) {
+                console.log(response);
+            })
+    }
+
+    function save() {
+        let data = {
+            'mock': mock.getValue(),
+            'snippet': kwEditor.getValue()
+        };
+        http('/variable/api/v1/save', 'post', data,
+            function (response) {
+                console.log(response);
+                alert(response['message'])
+            },
+            function (response) {
+                console.log(response);
+            })
+    }
+
+    $(function () {
+        $('#debug').click(debug);
+        $('#save').click(save);
+    })
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+<ul class="layui-nav" lay-filter="" style="z-index: 9999">
+    <li class="layui-nav-item"><a href="">首页</a></li>
+    <li class="layui-nav-item layui-this">
+        <a href="javascript:">接口测试</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="/interface/create">新增接口</a></dd>
+            <dd><a href="/interface/list">接口列表</a></dd>
+            <dd><a href="/interface/suite">套件列表</a></dd>
+            <dd><a href="/interface/report">测试报告</a></dd>
+        </dl>
+    </li>
+    <li class="layui-nav-item">
+        <a href="javascript:">变量管理</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="/variable">变量管理</a></dd>
+            <dd><a href="/variable/keyword">关键字管理</a></dd>
+        </dl>
+    </li>
+    <li class="layui-nav-item">
+        <a href="javascript:">UI自动化</a>
+        <dl class="layui-nav-child"> <!-- 二级菜单 -->
+            <dd><a href="/automation/create">脚本调试</a></dd>
+            <dd><a href="/automation/list">用例列表</a></dd>
+            <dd><a href="/automation/report">测试报告</a></dd>
+        </dl>
+    </li>
+    <li class="layui-nav-item">
+        <a href="/performance">性能测试</a>
+        <!--        <dl class="layui-nav-child"> &lt;!&ndash; 二级菜单 &ndash;&gt;-->
+        <!--            <dd><a href="/automation/create">脚本调试</a></dd>-->
+        <!--            <dd><a href="/automation/list">用例列表</a></dd>-->
+        <!--            <dd><a href="/automation/report">测试报告</a></dd>-->
+        <!--        </dl>-->
+    </li>
+<!--    <li class="layui-nav-item" lay-unselect="">-->
+<!--        <a href="javascript:">-->
+<!--            <img src="//t.cn/RCzsdCq" class="layui-nav-img">-->
+<!--            <label id="user"></label>-->
+<!--        </a>-->
+<!--        <dl class="layui-nav-child">-->
+<!--            <dd><a href="javascript:">修改信息</a></dd>-->
+<!--            <dd><a href="javascript:">安全管理</a></dd>-->
+<!--            <dd><a href="/logout" id="logout">退了</a></dd>-->
+<!--        </dl>-->
+<!--    </li>-->
+</ul>
+<script>
+    layui.use(['element'], function () {
+        let element = layui.element;
+        // $('#logout').on('click', function () {
+        //     $('#user').text('')
+        // })
+    })
+</script>

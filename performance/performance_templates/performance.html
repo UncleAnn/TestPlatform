@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block script %}
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/ace.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/mode-json.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/ace/1.4.7/mode-python.js"></script>
+{% endblock %}
+{% block content %}
+    <div class="layui-row" style="padding-top:30px">
+        <div class="layui-col-lg8" style="margin:30px">
+            <div id="editor" style="height:700px">from locust import HttpUser, task, between
+
+
+class MyTest(HttpUser):
+    host = 'https://www.baidu.com'
+    wait_time = between(2, 2)
+
+    @task
+    def kv_test(self):
+        # post请求参数，表单传给data，json字符串传给json
+        with self.client.get(url='/', name='get请求', timeout=10, catch_response=True) as response:
+            # text获取响应文本，json获取json类型的响应，content获取二进制的响应内容
+            resp = response.text
+            if 'success' in resp:
+                response.success()
+            else:
+                response.failure('测试失败')</div>
+        </div>
+        <div class="layui-col-lg3" style="margin:30px">
+            <form class="layui-form">
+                <div class="layui-form-item">
+                    <div class="layui-block">
+                        <input type="text" class="layui-input" id="time" placeholder="请输入压测时间(s)">
+                    </div>
+                </div>
+<!--                <div class="layui-form-item">-->
+<!--                    <div class="layui-block">-->
+<!--                        <input type="text" class="layui-input" id="host" placeholder="请输入域名">-->
+<!--                    </div>-->
+<!--                </div>-->
+                <div class="layui-form-item">
+                    <div class="layui-block">
+                        <input type="text" class="layui-input" id="user-num" placeholder="请输入用户数">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-block">
+                        <input type="text" class="layui-input" id="rate" placeholder="请输入每秒启动用户数">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-block">
+                        <input type="text" class="layui-btn layui-btn-normal" id="run" value="发起测试">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+    // 实例化一个编辑器对象，获取内容用 getValue()方法
+    let editor = ace.edit('editor');
+    // 设置编辑器皮肤
+    editor.setTheme('ace/theme/monokai');
+    // 设置编辑器的代码模式（json/python)
+    editor.getSession().setMode('ace/mode/python');
+    // 设置是否可折叠
+    editor.getSession().setUseWrapMode(true);
+    // 设置字体大小
+    editor.setFontSize(18);
+    
+    $('#run').click(function () {
+        let data = {
+            'code': editor.getValue(),
+            // 'host': $('#host').val(),
+            'user': $('#user-num').val(),
+            'rate': $('#rate').val(),
+            'time': $('#time').val()
+        };
+        http('/performance/api/v1/execute', 'post', data, function (response) {
+            console.log(response)
+        }, function (response) {
+            console.log(response)
+        })
+    });
+
+    
+</script>
+
+
+{% endblock %}
